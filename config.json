@@ -1,0 +1,133 @@
+{
+    "target_path": "/Game/ImportedAssets",
+    "organize_folders": true,
+
+    "process_textures": true,
+    "compress_textures": true,
+    "texture_group": "World",
+    "texture_special_folders": {
+        "enabled": true,
+        "mappings": [
+            {
+                "pattern": "_hdr",
+                "folder": "HDR",
+                "compression_settings": "HDR",
+                "srgb": false
+            },
+            {
+                "pattern": "_mask",
+                "folder": "Masks",
+                "compression_settings": "Masks",
+                "srgb": false
+            },
+            {
+                "pattern": "_alpha",
+                "folder": "Alpha",
+                "compression_settings": "Alpha",
+                "srgb": false
+            }
+        ]
+    },
+    "texture_settings": {
+        "diffuse": {
+            "compression_settings": "UserInterface2D",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": true
+        },
+        "normal": {
+            "compression_settings": "Normalmap",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": false
+        },
+        "roughness": {
+            "compression_settings": "Masks",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": false
+        },
+        "metallic": {
+            "compression_settings": "Masks",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": false
+        },
+        "specular": {
+            "compression_settings": "Masks",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": false
+        },
+        "emissive": {
+            "compression_settings": "UserInterface2D",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": true
+        },
+        "other": {
+            "compression_settings": "Default",
+            "mip_gen_settings": "FromTextureGroup",
+            "srgb": true
+        }
+    },
+
+    "create_materials": true,
+    "material_template": "/Game/MaterialTemplates/M_Standard",
+    "material_instance_suffix": "_Inst",
+    "material_template_mapping": {
+        "enabled": true,
+        "default_template": "/Game/MaterialTemplates/M_Standard",
+        "mappings": [
+            {
+                "pattern": "_Metal",
+                "template": "/Game/MaterialTemplates/M_Metal"
+            },
+            {
+                "pattern": "_Glass",
+                "template": "/Game/MaterialTemplates/M_Glass"
+            },
+            {
+                "pattern": "_Skin",
+                "template": "/Game/MaterialTemplates/M_Skin"
+            },
+            {
+                "pattern": "_Cloth",
+                "template": "/Game/MaterialTemplates/M_Cloth"
+            },
+            {
+                "pattern": "_Wood",
+                "template": "/Game/MaterialTemplates/M_Wood"
+            }
+        ]
+    },
+
+    "fbx_import": {
+        "static_mesh": {
+            "generate_lightmap_uvs": true,
+            "combine_meshes": false,
+            "auto_generate_collision": true,
+            "remove_degenerates": true,
+            "build_nanite": true
+        },
+        "skeletal_mesh": {
+            "import_morph_targets": true,
+            "import_meshes_in_bone_hierarchy": true,
+            "preserve_smoothing_groups": true,
+            "import_animations": true
+        },
+        "animation": {
+            "import_animations": true,
+            "animation_length": "ExportedTime",
+            "frame_import_range": [0, 0],
+            "use_default_sample_rate": true,
+            "custom_sample_rate": 30
+        }
+    },
+
+    "filename_patterns": {
+        "static_mesh": ["_SM", "_StaticMesh", "_Model"],
+        "skeletal_mesh": ["_SK", "_SkeletalMesh", "_Character"],
+        "animation": ["_Anim", "_Animation"],
+        "diffuse": ["_D", "_Diffuse", "_BaseColor", "_Albedo", "_Color"],
+        "normal": ["_N", "_Normal", "_Norm"],
+        "roughness": ["_R", "_Roughness", "_Rough"],
+        "metallic": ["_M", "_Metallic", "_Metal"],
+        "specular": ["_S", "_Specular", "_Spec"],
+        "emissive": ["_E", "_Emissive", "_Emission"]
+    }
+}
