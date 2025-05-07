@@ -26,6 +26,7 @@ try:
     from texture_processor import TextureProcessor
     from material_creator import MaterialCreator
     from asset_organizer import AssetOrganizer
+    from fbx_debugger import FbxDebugger
 except ImportError:
     print("无法导入自定义模块，请确保所有模块文件都在同一目录下")
 
@@ -103,6 +104,9 @@ class AssetImporterGUI:
         # 创建按钮区域
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, pady=5)
+
+        self.debug_button = ttk.Button(button_frame, text="调试FBX", command=self.debug_fbx, state="disabled")
+        self.debug_button.pack(side=tk.LEFT, padx=5)
 
         self.import_button = ttk.Button(button_frame, text="开始导入", command=self.start_import, state="disabled")
         self.import_button.pack(side=tk.LEFT, padx=5)
@@ -207,6 +211,7 @@ class AssetImporterGUI:
         if folder:
             self.folder_path_var.set(folder)
             self.import_button["state"] = "normal"
+            self.debug_button["state"] = "normal"
             self.log(f"已选择文件夹: {folder}")
 
     def save_config(self):
@@ -265,6 +270,174 @@ class AssetImporterGUI:
         import_mode = config.get("import_mode", {})
         self.use_specified_folder_var.set(import_mode.get("use_specified_folder", True))
         self.current_browser_folder_var.set(import_mode.get("current_browser_folder", ""))
+
+    def debug_fbx(self):
+        """调试FBX文件"""
+        # 获取当前设置
+        source_folder = self.folder_path_var.get()
+
+        if not source_folder:
+            messagebox.showerror("错误", "请选择源文件夹")
+            return
+
+        # 收集当前配置
+        config = {
+            "process_textures": self.process_textures_var.get(),
+            "create_materials": self.create_materials_var.get(),
+            "organize_folders": self.organize_folders_var.get(),
+            "compress_textures": self.compress_textures_var.get(),
+            "target_path": self.target_path_var.get(),
+            "material_template": self.material_template_var.get(),
+            "import_mode": {
+                "use_specified_folder": self.use_specified_folder_var.get(),
+                "current_browser_folder": self.current_browser_folder_var.get()
+            }
+        }
+
+        # 创建FBX调试对话框
+        debug_window = tk.Toplevel(self.root)
+        debug_window.title("FBX文件调试")
+        debug_window.geometry("800x600")
+        debug_window.minsize(800, 600)
+
+        # 创建主框架
+        main_frame = ttk.Frame(debug_window, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 创建文件列表区域
+        files_frame = ttk.LabelFrame(main_frame, text="FBX文件列表", padding="5")
+        files_frame.pack(fill=tk.BOTH, expand=True, side=tk.LEFT, padx=(0, 5))
+
+        # 创建文件列表
+        file_listbox = tk.Listbox(files_frame)
+        file_listbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # 添加滚动条
+        file_scrollbar = ttk.Scrollbar(file_listbox, orient="vertical", command=file_listbox.yview)
+        file_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        file_listbox.config(yscrollcommand=file_scrollbar.set)
+
+        # 创建调试结果区域
+        result_frame = ttk.LabelFrame(main_frame, text="调试结果", padding="5")
+        result_frame.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
+
+        # 创建调试结果文本框
+        result_text = scrolledtext.ScrolledText(result_frame, wrap=tk.WORD)
+        result_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # 扫描文件夹，查找FBX文件
+        fbx_files = []
+        for root, _, files in os.walk(source_folder):
+            for file in files:
+                if file.lower().endswith('.fbx'):
+                    fbx_path = os.path.join(root, file)
+                    fbx_files.append(fbx_path)
+                    file_listbox.insert(tk.END, file)
+
+        # 如果没有找到FBX文件，显示提示
+        if not fbx_files:
+            result_text.insert(tk.END, "未找到FBX文件\n")
+            return
+
+        # 创建FBX调试器
+        fbx_debugger = FbxDebugger(config)
+
+        # 定义文件选择事件处理函数
+        def on_file_select(event):
+            # 获取选中的文件索引
+            selection = file_listbox.curselection()
+            if not selection:
+                return
+
+            # 获取选中的文件路径
+            index = selection[0]
+            fbx_path = fbx_files[index]
+
+            # 清空结果文本框
+            result_text.delete(1.0, tk.END)
+            result_text.insert(tk.END, f"正在调试: {os.path.basename(fbx_path)}\n\n")
+
+            # 调试FBX文件
+            debug_result = fbx_debugger.debug_fbx(fbx_path)
+
+            # 显示调试结果
+            if "error" in debug_result:
+                result_text.insert(tk.END, f"错误: {debug_result['error']}\n")
+                return
+
+            # 显示基本信息
+            result_text.insert(tk.END, f"文件名: {debug_result['file_name']}\n")
+            result_text.insert(tk.END, f"文件路径: {debug_result['file_path']}\n\n")
+
+            # 显示静态网格信息
+            is_static = debug_result['is_static_mesh']
+            result_text.insert(tk.END, f"是否为静态网格: {'是' if is_static else '否'}\n")
+
+            # 显示碰撞信息
+            collision_info = debug_result['has_collision']
+            result_text.insert(tk.END, "\n碰撞信息:\n")
+
+            if isinstance(collision_info, dict):
+                has_collision = collision_info.get('has_collision', False)
+                result_text.insert(tk.END, f"  是否有碰撞: {'是' if has_collision else '否'}\n")
+
+                if 'has_custom_collision' in collision_info:
+                    result_text.insert(tk.END, f"  是否有自定义碰撞: {'是' if collision_info['has_custom_collision'] else '否'}\n")
+
+                if 'has_simple_collision' in collision_info:
+                    result_text.insert(tk.END, f"  是否有简单碰撞: {'是' if collision_info['has_simple_collision'] else '否'}\n")
+
+                if 'has_ucx_collision' in collision_info:
+                    result_text.insert(tk.END, f"  是否有UCX碰撞: {'是' if collision_info['has_ucx_collision'] else '否'}\n")
+
+                if 'collision_complexity' in collision_info:
+                    result_text.insert(tk.END, f"  碰撞复杂度: {collision_info['collision_complexity']}\n")
+
+                if 'details' in collision_info:
+                    result_text.insert(tk.END, f"  详细信息: {collision_info['details']}\n")
+
+                if 'error' in collision_info:
+                    result_text.insert(tk.END, f"  错误: {collision_info['error']}\n")
+            else:
+                result_text.insert(tk.END, f"  碰撞信息: {collision_info}\n")
+
+            # 显示材质槽信息
+            material_slots = debug_result['material_slots']
+            result_text.insert(tk.END, "\n材质槽信息:\n")
+
+            if isinstance(material_slots, dict):
+                has_materials = material_slots.get('has_materials', False)
+                total_slots = material_slots.get('total_slots', 0)
+                missing_materials = material_slots.get('missing_materials', 0)
+
+                result_text.insert(tk.END, f"  是否有材质: {'是' if has_materials else '否'}\n")
+                result_text.insert(tk.END, f"  材质槽总数: {total_slots}\n")
+                result_text.insert(tk.END, f"  缺失材质数: {missing_materials}\n\n")
+
+                if 'material_slots' in material_slots and material_slots['material_slots']:
+                    result_text.insert(tk.END, "  材质槽列表:\n")
+                    for slot in material_slots['material_slots']:
+                        slot_info = f"    {slot.get('name', 'Unknown')}: "
+                        slot_info += "有材质" if slot.get('has_material', False) else "缺失材质"
+                        result_text.insert(tk.END, f"{slot_info}\n")
+
+                if 'missing_material_slots' in material_slots and material_slots['missing_material_slots']:
+                    result_text.insert(tk.END, "\n  缺失材质的槽:\n")
+                    for slot_name in material_slots['missing_material_slots']:
+                        result_text.insert(tk.END, f"    {slot_name}\n")
+
+                if 'error' in material_slots:
+                    result_text.insert(tk.END, f"\n  错误: {material_slots['error']}\n")
+            else:
+                result_text.insert(tk.END, f"  材质槽信息: {material_slots}\n")
+
+        # 绑定文件选择事件
+        file_listbox.bind('<<ListboxSelect>>', on_file_select)
+
+        # 默认选中第一个文件
+        if fbx_files:
+            file_listbox.selection_set(0)
+            file_listbox.event_generate('<<ListboxSelect>>')
 
     def start_import(self):
         """开始导入过程"""
