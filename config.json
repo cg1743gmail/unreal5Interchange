@@ -96,6 +96,45 @@
         ]
     },
 
+    "material_slot_mapping": {
+        "enabled": true,
+        "default_template": "/Game/MaterialTemplates/M_Standard",
+        "save_material_instances": true,
+        "material_instances_path": "/Game/MaterialInstances",
+        "naming_convention": {
+            "format": "MI_{asset_name}_{slot_name}_{template_name}",
+            "replace_spaces": "_",
+            "case": "upper"
+        },
+        "mappings": [
+            {
+                "pattern": "Metal",
+                "template": "/Game/MaterialTemplates/M_Metal"
+            },
+            {
+                "pattern": "Glass",
+                "template": "/Game/MaterialTemplates/M_Glass"
+            },
+            {
+                "pattern": "Skin",
+                "template": "/Game/MaterialTemplates/M_Skin"
+            },
+            {
+                "pattern": "Cloth",
+                "template": "/Game/MaterialTemplates/M_Cloth"
+            },
+            {
+                "pattern": "Wood",
+                "template": "/Game/MaterialTemplates/M_Wood"
+            }
+        ]
+    },
+
+    "import_mode": {
+        "use_specified_folder": true,
+        "current_browser_folder": ""
+    },
+
     "fbx_import": {
         "static_mesh": {
             "generate_lightmap_uvs": true,
